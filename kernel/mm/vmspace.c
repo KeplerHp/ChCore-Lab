@@ -227,8 +227,7 @@ static int fill_page_table(struct vmspace *vmspace, struct vmregion *vmr)
         va = vmr->start;
 
         lock(&vmspace->pgtbl_lock);
-        ret = map_range_in_pgtbl(
-                vmspace->pgtbl, va, pa, pm_size, vmr->perm);
+        ret = map_range_in_pgtbl(vmspace->pgtbl, va, pa, pm_size, vmr->perm);
         unlock(&vmspace->pgtbl_lock);
 
         return ret;
@@ -456,7 +455,13 @@ struct vmregion *find_vmr_for_va(struct vmspace *vmspace, vaddr_t addr)
         /* LAB 2 TODO 6 BEGIN */
         /* Hint: Find the corresponding vmr for @addr in @vmspace */
         /* BLANK BEGIN */
+        struct rb_node *node =
+                rb_search(&(vmspace->vmr_tree), addr, cmp_vmr_and_va);
 
+        if (node == NULL)
+                return node;
+
+        return rb_entry(node, struct vmregion, tree_node);
         /* BLANK END */
         /* LAB 2 TODO 6 END */
 }

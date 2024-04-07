@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 #include <common/util.h>
@@ -53,6 +53,23 @@ static struct page *split_chunk(struct phys_mem_pool *pool, int order,
          * a suitable free list.
          */
         /* BLANK BEGIN */
+        if (chunk->order == order) {
+                return chunk;
+        }
+
+        // split the chunk to two parts
+        chunk->order--;
+        struct page *buddy_chunk = get_buddy_chunk(pool, chunk);
+        buddy_chunk->order = chunk->order;
+
+        list_add(&buddy_chunk->node,
+                 &(pool->free_lists[chunk->order].free_list));
+        pool->free_lists[chunk->order].nr_free += 1;
+
+        buddy_chunk->pool = chunk->pool;
+        buddy_chunk->allocated = 0;
+
+        return split_chunk(pool, order, chunk);
 
         /* BLANK END */
         /* LAB 2 TODO 1 END */
@@ -68,6 +85,29 @@ static struct page *merge_chunk(struct phys_mem_pool *pool, struct page *chunk)
          * if possible.
          */
         /* BLANK BEGIN */
+        if (chunk->order == (BUDDY_MAX_ORDER - 1)) {
+                return chunk;
+        }
+
+        struct page *buddy_chunk = get_buddy_chunk(pool, chunk);
+        if (buddy_chunk == NULL || buddy_chunk->order != chunk->order) {
+                return chunk;
+        }
+        if (buddy_chunk->allocated == 1) {
+                return chunk;
+        }
+
+        list_del(&buddy_chunk->node);
+        pool->free_lists[chunk->order].nr_free--;
+
+        buddy_chunk->order++;
+        chunk->order++;
+
+        if (chunk > buddy_chunk) {
+                return merge_chunk(pool, buddy_chunk);
+        } else {
+                return merge_chunk(pool, chunk);
+        }
 
         /* BLANK END */
         /* LAB 2 TODO 1 END */
@@ -140,6 +180,27 @@ struct page *buddy_get_pages(struct phys_mem_pool *pool, int order)
          * in the free lists, then split it if necessary.
          */
         /* BLANK BEGIN */
+        // find the first order that has free chunk
+        cur_order = order;
+        for (; cur_order < BUDDY_MAX_ORDER; cur_order++) {
+                if (pool->free_lists[cur_order].nr_free > 0) {
+                        break;
+                }
+        }
+        // if there is no free chunk, return NULL
+        if (cur_order == BUDDY_MAX_ORDER) {
+                page = NULL;
+        } else {
+                free_list = pool->free_lists[cur_order].free_list.next;
+                page = list_entry(free_list, struct page, node);
+                pool->free_lists[page->order].nr_free--;
+
+                page = split_chunk(pool, order, page); // split the
+                                                       // chunk to the
+                                                       // order we want
+                page->allocated = 1;
+                list_del(&page->node);
+        }
 
         /* BLANK END */
         /* LAB 2 TODO 1 END */
@@ -161,7 +222,13 @@ void buddy_free_pages(struct phys_mem_pool *pool, struct page *page)
          * a suitable free list.
          */
         /* BLANK BEGIN */
+        page->allocated = 0;
+        page = merge_chunk(pool, page);
 
+        order = page->order;
+        free_list = &(pool->free_lists[order].free_list);
+        list_add(&page->node, free_list);
+        pool->free_lists[order].nr_free++;
         /* BLANK END */
         /* LAB 2 TODO 1 END */
 

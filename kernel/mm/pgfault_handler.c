@@ -209,7 +209,8 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                         /* LAB 2 TODO 7 BEGIN */
                         /* BLANK BEGIN */
                         /* Hint: Allocate a physical page and clear it to 0. */
-
+                        pa = virt_to_phys(get_pages(0));
+                        memset(phys_to_virt(pa), 0, PAGE_SIZE);
                         /* BLANK END */
                         /*
                          * Record the physical page in the radix tree:
@@ -221,7 +222,11 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                         /* Add mapping in the page table */
                         lock(&vmspace->pgtbl_lock);
                         /* BLANK BEGIN */
-
+                        map_range_in_pgtbl(vmspace->pgtbl,
+                                           fault_addr,
+                                           pa,
+                                           PAGE_SIZE,
+                                           perm);
                         /* BLANK END */
                         unlock(&vmspace->pgtbl_lock);
                 } else {
@@ -250,7 +255,11 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                                 /* Add mapping in the page table */
                                 lock(&vmspace->pgtbl_lock);
                                 /* BLANK BEGIN */
-
+                                map_range_in_pgtbl(vmspace->pgtbl,
+                                                   fault_addr,
+                                                   pa,
+                                                   PAGE_SIZE,
+                                                   perm);
                                 /* BLANK END */
                                 /* LAB 2 TODO 7 END */
                                 unlock(&vmspace->pgtbl_lock);

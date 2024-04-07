@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 #include <common/macro.h>
@@ -139,7 +139,19 @@ static void choose_new_current_slab(struct slab_pointer *pool)
         /* LAB 2 TODO 2 BEGIN */
         /* Hint: Choose a partial slab to be a new current slab. */
         /* BLANK BEGIN */
+        struct list_head *list;
 
+        list = &(pool->partial_slab_list);
+        if (list_empty(list)) {
+                pool->current_slab = NULL;
+        } else {
+                struct slab_header *slab;
+
+                slab = (struct slab_header *)list_entry(
+                        list->next, struct slab_header, node);
+                pool->current_slab = slab;
+                list_del(list->next);
+        }
         /* BLANK END */
         /* LAB 2 TODO 2 END */
 }
@@ -169,7 +181,18 @@ static void *alloc_in_slab_impl(int order)
          * If current slab is full, choose a new slab as the current one.
          */
         /* BLANK BEGIN */
+        free_list = (struct slab_slot_list *)current_slab->free_list_head;
+        BUG_ON(free_list == NULL);
 
+        next_slot = free_list->next_free;
+        current_slab->free_list_head = next_slot;
+
+        current_slab->current_free_cnt--;
+
+        if (unlikely(current_slab->current_free_cnt == 0)) {
+                // try_insert_full_slab_to_partial(current_slab);
+                choose_new_current_slab(&slab_pool[order]);
+        }
         /* BLANK END */
         /* LAB 2 TODO 2 END */
 
@@ -272,7 +295,6 @@ void free_in_slab(void *addr)
                 return;
         }
 
-
         slab = page->slab;
         order = slab->order;
         lock(&slabs_locks[order]);
@@ -296,7 +318,9 @@ void free_in_slab(void *addr)
          * Hint: Free an allocated slot and put it back to the free list.
          */
         /* BLANK BEGIN */
-
+        slot->next_free = slab->free_list_head;
+        slab->free_list_head = slot;
+        slab->current_free_cnt++;
         /* BLANK END */
         /* LAB 2 TODO 2 END */
 

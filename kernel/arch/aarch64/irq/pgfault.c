@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 #include <arch/machine/esr.h>
@@ -57,7 +57,7 @@ void do_page_fault(u64 esr, u64 fault_ins_addr, int type, u64 *fix_addr)
         case DFSC_TRANS_FAULT_L3: {
                 /* LAB 2 TODO 5 BEGIN */
                 /* BLANK BEGIN */
-
+                ret = handle_trans_fault(current_thread->vmspace, fault_addr);
                 /* BLANK END */
                 /* LAB 2 TODO 5 END */
                 if (ret != 0) {
@@ -77,7 +77,7 @@ void do_page_fault(u64 esr, u64 fault_ins_addr, int type, u64 *fix_addr)
                         kprint_vmr(current_thread->vmspace);
 
                         kinfo("current_cap_group is %s\n",
-                                        current_cap_group->cap_group_name);
+                              current_cap_group->cap_group_name);
 
                         sys_exit_group(-1);
                 }
