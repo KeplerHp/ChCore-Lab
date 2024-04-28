@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 #include <object/cap_group.h>
@@ -240,11 +240,11 @@ void obj_put(void *obj)
         }
 }
 
-/* 
+/*
  * This interface will add an object's refcnt by one.
  * If you do not have the cap of an object, you can
  * use this interface to just claim a reference.
- * 
+ *
  * Be sure to call obj_put when releasing the reference.
  */
 void obj_ref(void *obj)
@@ -256,10 +256,10 @@ void obj_ref(void *obj)
 }
 
 struct cap_group_args {
-	badge_t badge;
-	vaddr_t name;
-	unsigned long name_len;
-	unsigned long pcid;
+        badge_t badge;
+        vaddr_t name;
+        unsigned long name_len;
+        unsigned long pcid;
 };
 
 cap_t sys_create_cap_group(unsigned long cap_group_args_p)
@@ -271,23 +271,27 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
         struct cap_group_args args = {0};
 
         r = hook_sys_create_cap_group(cap_group_args_p);
-        if (r != 0) return r;
+        if (r != 0)
+                return r;
 
         if (check_user_addr_range((vaddr_t)cap_group_args_p,
-                sizeof(struct cap_group_args)) != 0)
+                                  sizeof(struct cap_group_args))
+            != 0)
                 return -EINVAL;
 
-        r = copy_from_user(&args, (void *)cap_group_args_p, sizeof(struct cap_group_args));
+        r = copy_from_user(
+                &args, (void *)cap_group_args_p, sizeof(struct cap_group_args));
         if (r) {
                 return -EINVAL;
         }
 
-        if (check_user_addr_range((vaddr_t)args.name, (size_t)args.name_len) != 0)
+        if (check_user_addr_range((vaddr_t)args.name, (size_t)args.name_len)
+            != 0)
                 return -EINVAL;
 
         /* cap current cap_group */
         /* LAB 3 TODO BEGIN */
-
+        new_cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
         /* LAB 3 TODO END */
         if (!new_cap_group) {
                 r = -ENOMEM;
@@ -295,7 +299,7 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
         }
         /* LAB 3 TODO BEGIN */
         /* initialize cap group */
-
+        cap_group_init(new_cap_group, BASE_OBJECT_NUM, args.badge);
         /* LAB 3 TODO END */
 
         cap = cap_alloc(current_cap_group, new_cap_group);
@@ -307,14 +311,15 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
         /* 1st cap is cap_group */
         if (cap_copy(current_thread->cap_group, new_cap_group, cap)
             != CAP_GROUP_OBJ_ID) {
-                kwarn("%s: cap_copy fails or cap[0] is not cap_group\n", __func__);
+                kwarn("%s: cap_copy fails or cap[0] is not cap_group\n",
+                      __func__);
                 r = -ECAPBILITY;
                 goto out_free_cap_grp_current;
         }
 
         /* 2st cap is vmspace */
         /* LAB 3 TODO BEGIN */
-
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
         /* LAB 3 TODO END */
 
         if (!vmspace) {
@@ -326,7 +331,8 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
 
         r = cap_alloc(new_cap_group, vmspace);
         if (r != VMSPACE_OBJ_ID) {
-                kwarn("%s: cap_copy fails or cap[1] is not vmspace\n", __func__);
+                kwarn("%s: cap_copy fails or cap[1] is not vmspace\n",
+                      __func__);
                 r = -ECAPBILITY;
                 goto out_free_obj_vmspace;
         }
@@ -337,7 +343,7 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
         memset(new_cap_group->cap_group_name, 0, MAX_GROUP_NAME_LEN + 1);
         if (args.name_len > MAX_GROUP_NAME_LEN)
                 args.name_len = MAX_GROUP_NAME_LEN;
-        
+
         r = copy_from_user(new_cap_group->cap_group_name,
                            (void *)args.name,
                            args.name_len);
@@ -366,20 +372,20 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         cap_t slot_id;
 
         /* LAB 3 TODO BEGIN */
-
+        cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
         /* LAB 3 TODO END */
         BUG_ON(!cap_group);
 
         /* LAB 3 TODO BEGIN */
         /* initialize cap group, use ROOT_CAP_GROUP_BADGE */
-
+        cap_group_init(cap_group, BASE_OBJECT_NUM, ROOT_CAP_GROUP_BADGE);
         /* LAB 3 TODO END */
         slot_id = cap_alloc(cap_group, cap_group);
 
         BUG_ON(slot_id != CAP_GROUP_OBJ_ID);
 
         /* LAB 3 TODO BEGIN */
-
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
         /* LAB 3 TODO END */
         BUG_ON(!vmspace);
 
@@ -387,7 +393,7 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         vmspace_init(vmspace, ROOT_PROCESS_PCID);
 
         /* LAB 3 TODO BEGIN */
-        
+        slot_id = cap_alloc(cap_group, vmspace);
         /* LAB 3 TODO END */
 
         BUG_ON(slot_id != VMSPACE_OBJ_ID);

@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 /* File operation towards STDIN, STDOUT and STDERR */
@@ -79,8 +79,8 @@ static void get_buf_rpos_wpos(void)
         }
 
         if (shell_msg_struct == NULL) {
-                procmgr_msg = ipc_create_msg(
-                        procmgr_ipc_struct, sizeof(struct proc_request));
+                procmgr_msg = ipc_create_msg(procmgr_ipc_struct,
+                                             sizeof(struct proc_request));
                 proc_req = (struct proc_request *)ipc_get_msg_data(procmgr_msg);
 
                 proc_req->req = PROC_REQ_GET_SHELL_CAP;
@@ -129,7 +129,7 @@ static int get_one_char(void)
 static void put(char buffer[], unsigned size)
 {
         /* LAB 3 TODO BEGIN */
-
+        chcore_syscall2(CHCORE_SYS_putstr, (vaddr_t)buffer, size);
         /* LAB 3 TODO END */
 }
 
@@ -185,7 +185,7 @@ static ssize_t chcore_stdio_read(int fd, void *buf, size_t count)
                 }
 
                 if (ch == '\b' && canon_mode) {
-                        n--; 
+                        n--;
                         continue;
                 }
 
@@ -246,9 +246,9 @@ static int chcore_stdio_ioctl(int fd, unsigned long request, void *arg)
         }
         default:
                 warn("Unsupported ioctl fd=%d, cmd=0x%lx, arg=0x%lx\n",
-                fd,
-                request,
-                arg);
+                     fd,
+                     request,
+                     arg);
                 break;
         }
 
