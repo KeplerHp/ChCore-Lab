@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS), Shanghai Jiao Tong University (SJTU)
- * Licensed under the Mulan PSL v2.
- * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * Copyright (c) 2023 Institute of Parallel And Distributed Systems (IPADS),
+ * Shanghai Jiao Tong University (SJTU) Licensed under the Mulan PSL v2. You can
+ * use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *     http://license.coscl.org.cn/MulanPSL2
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
- * PURPOSE.
- * See the Mulan PSL v2 for more details.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE. See the
+ * Mulan PSL v2 for more details.
  */
 
 #include <chcore-internal/fs_debug.h>
@@ -51,8 +51,8 @@ int alloc_entry(void)
         return -1;
 }
 
-void assign_entry(struct server_entry *entry, u64 flags, off_t offset, int refcnt, void *path,
-                  struct fs_vnode *vnode)
+void assign_entry(struct server_entry *entry, u64 flags, off_t offset,
+                  int refcnt, void *path, struct fs_vnode *vnode)
 {
         fs_debug_trace_fswrapper(
                 "flags=0x%lo, offset=0x%ld, path=%s, vnode_id=%ld\n",
@@ -83,7 +83,19 @@ struct fs_vnode *alloc_fs_vnode(ino_t id, enum fs_vnode_type type, off_t size,
 {
         /* Lab 5 TODO Begin */
 
-        return NULL;
+        struct fs_vnode *ret = (struct fs_vnode *)malloc(sizeof(*ret));
+
+        ret->vnode_id = id;
+        ret->type = type;
+        ret->size = size;
+        ret->private = private;
+        ret->refcnt = 1;
+        ret->pmo_cap = -1;
+
+        // extern bool using_page_cache;
+        // init_list_head(&ret->node);
+
+        return ret;
 
         /* Lab 5 TODO End */
 }
@@ -105,7 +117,15 @@ void pop_free_fs_vnode(struct fs_vnode *n)
 struct fs_vnode *get_fs_vnode_by_id(ino_t vnode_id)
 {
         /* Lab 5 TODO Begin */
-        
+        struct fs_vnode *n;
+        struct rb_node *node;
+        rb_for_each(fs_vnode_list, node)
+        {
+                n = rb_entry(node, struct fs_vnode, node);
+                if (n->vnode_id == vnode_id) {
+                        return n;
+                }
+        }
         return NULL;
 
         /* Lab 5 TODO End */
@@ -115,8 +135,8 @@ struct fs_vnode *get_fs_vnode_by_id(ino_t vnode_id)
 int inc_ref_fs_vnode(void *n)
 {
         /* Lab 5 TODO Begin */
-
-
+        struct fs_vnode *node = (struct fs_vnode *)n;
+        node->refcnt++;
         /* Lab 5 TODO End */
         return 0;
 }
@@ -126,8 +146,12 @@ int dec_ref_fs_vnode(void *node)
 {
         /* Lab 5 TODO Begin */
 
-        UNUSED(node);
-        
+        struct fs_vnode *n = (struct fs_vnode *)node;
+        n->refcnt--;
+        if (n->refcnt == 0) {
+                pop_free_fs_vnode(n);
+        }
+
         /* Lab 5 TODO End */
 
         return 0;
